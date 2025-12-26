@@ -14,14 +14,17 @@
       <div class="user-section">
         <div class="user-info" v-if="user">
           <div class="user-details">
+            <p class="user-name">{{ user.user_metadata?.full_name || 'User' }}</p>
             <p class="user-email">{{ user.email }}</p>
-            <p class="user-role">
-              <span class="status-dot"></span>
-              Admin Access
-            </p>
           </div>
           <div class="user-avatar">
-            {{ user?.email?.charAt(0).toUpperCase() || 'U' }}
+            <img 
+              v-if="user.user_metadata?.avatar_url" 
+              :src="user.user_metadata.avatar_url" 
+              alt="User Avatar" 
+              class="avatar-img"
+            />
+            <span v-else>{{ user?.email?.charAt(0).toUpperCase() || 'U' }}</span>
           </div>
         </div>
         
@@ -71,7 +74,7 @@ const handleLogout = async () => {
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -122,36 +125,25 @@ const handleLogout = async () => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .user-details {
   text-align: right;
+  line-height: 1.3;
 }
 
-.user-email {
+.user-name {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
   margin: 0;
 }
 
-.user-role {
-  font-size: 12px;
+.user-email {
+  font-size: 11px;
   color: #666;
-  margin: 4px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background-color: var(--color-success);
-  border-radius: 50%;
-  display: inline-block;
+  margin: 0;
 }
 
 .user-avatar {
@@ -165,6 +157,13 @@ const handleLogout = async () => {
   justify-content: center;
   font-weight: 600;
   color: #555;
+  overflow: hidden;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .logout-btn {
@@ -206,8 +205,8 @@ const handleLogout = async () => {
 }
 
 @media (prefers-color-scheme: dark) {
-  .logo-subtitle, .user-role {
-    color: #aaa;
+  .logo-subtitle, .user-email {
+    color: #999;
   }
   
   .user-avatar {

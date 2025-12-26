@@ -8,6 +8,9 @@
         <div class="pane sidebar-msisdn">
           <div class="pane-header">
             <h3>MSISDNs</h3>
+            <button @click="handleRefreshMSISDNs" class="icon-btn-sm" title="Refresh List">
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
           </div>
           <div class="pane-content">
             <div v-if="smsStore.loadingMSISDNs" class="loading-state-sm">
@@ -31,8 +34,18 @@
         <!-- Pane 2: Sender List -->
         <div class="pane sidebar-sender">
           <div class="pane-header">
-            <h3>Senders</h3>
-            <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{ smsStore.selectedMSISDN }}</span>
+            <div class="header-title">
+              <h3>Senders</h3>
+              <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{ smsStore.selectedMSISDN }}</span>
+            </div>
+            <button 
+              v-if="smsStore.selectedMSISDN" 
+              @click="handleRefreshSenders" 
+              class="icon-btn-sm" 
+              title="Refresh List"
+            >
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
           </div>
           <div class="pane-content">
             <div v-if="!smsStore.selectedMSISDN" class="empty-selection">
@@ -116,7 +129,7 @@
                     <button 
                       @click="copyText(sms.message)" 
                       class="copy-btn-sm" 
-                      title="Copy message"
+                      title="Copy OTP or Message"
                     >
                       <span class="material-symbols-outlined">content_copy</span>
                     </button>
@@ -139,7 +152,7 @@ import { ref, onMounted, nextTick, watch } from "vue";
 import { useSMSStore } from "@/stores/sms";
 import Header from "./Header.vue";
 import { copyToClipboard } from "@/utils/clipboard";
-import { highlightOTP, hasOTP } from "@/utils/otp";
+import { highlightOTP, hasOTP, extractOTP } from "@/utils/otp";
 
 const smsStore = useSMSStore();
 const chatContentRef = ref<HTMLElement | null>(null);
@@ -152,6 +165,17 @@ const handleSelectMSISDN = async (msisdn: string) => {
 const handleSelectSender = async (sender: string) => {
   if (smsStore.selectedSender === sender) return;
   await smsStore.selectSender(sender);
+};
+
+const handleRefreshMSISDNs = async () => {
+  await smsStore.loadMSISDNsList();
+};
+
+const handleRefreshSenders = async () => {
+  if (smsStore.selectedMSISDN) {
+    // Re-triggering selection loads the senders again
+    await smsStore.selectMSISDN(smsStore.selectedMSISDN);
+  }
 };
 
 const handleRefreshChat = async () => {
@@ -170,11 +194,17 @@ const formatTime = (dateString: string) => {
 
 const copyText = async (text: string) => {
   try {
-    await copyToClipboard(text);
+    const otps = extractOTP(text);
+    // Prioritize copying OTP if found
+    const textToCopy = otps.length > 0 ? otps[0] : text;
+    if (textToCopy) {
+      await copyToClipboard(textToCopy);
+    }
   } catch (err) {
     console.error("Failed to copy:", err);
   }
 };
+
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -229,13 +259,33 @@ onMounted(async () => {
   border-bottom: 1px solid var(--color-border);
   background-color: var(--color-bg);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.pane-header h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--color-text);
+.icon-btn, .icon-btn-sm {
+  padding: 8px;
+  background: transparent;
+  color: #999;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn-sm {
+  padding: 4px;
+}
+
+.icon-btn:hover, .icon-btn-sm:hover {
+  background-color: #f0f0f0;
+  color: var(--color-primary);
+}
+
+.icon-btn-sm .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .pane-content {
