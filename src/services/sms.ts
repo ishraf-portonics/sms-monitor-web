@@ -138,3 +138,49 @@ export const getUniqueMSISDNs = async () => {
     throw err;
   }
 };
+
+export const getSendersForMSISDN = async (msisdn: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("sms_messages")
+      .select("sender", { count: "exact" })
+      .eq("msisdn", msisdn)
+      .order("sender");
+
+    if (error) {
+      console.error("Error fetching senders for MSISDN:", error.message);
+      throw error;
+    }
+
+    // Get unique senders for this MSISDN
+    const uniqueSenders = Array.from(
+      new Set((data as any[])?.map((d) => d.sender) || [])
+    );
+
+    return uniqueSenders;
+  } catch (err) {
+    console.error(`Failed to fetch senders for MSISDN ${msisdn}:`, err);
+    throw err;
+  }
+};
+
+export const fetchConversation = async (msisdn: string, sender: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("sms_messages")
+      .select("*")
+      .eq("msisdn", msisdn)
+      .eq("sender", sender)
+      .order("received_at", { ascending: true }); // Oldest first for chat
+
+    if (error) {
+      console.error("Error fetching conversation:", error.message);
+      throw error;
+    }
+
+    return (data as SMS[]) || [];
+  } catch (err) {
+    console.error("Failed to fetch conversation:", err);
+    throw err;
+  }
+};

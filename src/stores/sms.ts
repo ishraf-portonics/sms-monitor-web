@@ -119,6 +119,54 @@ export const useSMSStore = defineStore("sms", () => {
     }
   };
 
+  // New state for 3-pane layout
+  const selectedMSISDN = ref<string | null>(null);
+  const selectedSender = ref<string | null>(null);
+  const currentConversation = ref<SMS[]>([]);
+  const filteredSenders = ref<string[]>([]); // Senders for the selected MSISDN
+
+  const selectMSISDN = async (msisdn: string) => {
+    selectedMSISDN.value = msisdn;
+    selectedSender.value = null; // Reset sender
+    currentConversation.value = []; // Reset chat
+    
+    // Load senders available for this MSISDN
+    try {
+      loadingSenders.value = true;
+      // We import getSendersForMSISDN dynamically to avoid circular dependency issues if any,
+      // though typically best to import at top. We'll update imports next.
+      const { getSendersForMSISDN } = await import("@/services/sms"); 
+      filteredSenders.value = await getSendersForMSISDN(msisdn);
+    } catch (err) {
+      console.error("Failed to load senders for MSISDN:", err);
+      filteredSenders.value = [];
+    } finally {
+      loadingSenders.value = false;
+    }
+  };
+
+  const selectSender = async (sender: string) => {
+    if (!selectedMSISDN.value) return;
+    
+    selectedSender.value = sender;
+    try {
+      loading.value = true;
+      const { fetchConversation } = await import("@/services/sms");
+      currentConversation.value = await fetchConversation(selectedMSISDN.value, sender);
+    } catch (err) {
+      console.error("Failed to load conversation:", err);
+      error.value = "Failed to load conversation";
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const refreshConversation = async () => {
+    if (selectedMSISDN.value && selectedSender.value) {
+      await selectSender(selectedSender.value);
+    }
+  };
+
   return {
     // State
     messages,
@@ -132,6 +180,12 @@ export const useSMSStore = defineStore("sms", () => {
     uniqueMSISDNs,
     loadingSenders,
     loadingMSISDNs,
+    
+    // New State
+    selectedMSISDN,
+    selectedSender,
+    currentConversation,
+    filteredSenders,
 
     // Computed
     hasMore,
@@ -146,5 +200,10 @@ export const useSMSStore = defineStore("sms", () => {
     clearFilters,
     loadSendersList,
     loadMSISDNsList,
+    
+    // New Actions
+    selectMSISDN,
+    selectSender,
+    refreshConversation,
   };
 });

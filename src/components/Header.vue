@@ -1,54 +1,37 @@
 <template>
-  <header
-    class="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-slate-900/80 border-b-2 border-slate-200/60 dark:border-slate-700/60 px-6 md:px-8 py-4 shadow-lg shadow-slate-200/20 dark:shadow-slate-950/40"
-  >
-    <div class="flex items-center justify-between max-w-7xl mx-auto">
-      <div class="flex items-center gap-4">
-        <div
-          class="flex items-center justify-center size-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform"
-        >
-          <span class="material-symbols-outlined text-2xl">sms</span>
+  <header class="app-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo-box">
+          <span class="material-symbols-outlined logo-icon">sms</span>
         </div>
-        <div>
-          <h1
-            class="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-blue-700 dark:from-white dark:to-blue-300 bg-clip-text text-transparent"
-          >
-            SMS Monitor
-          </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 hidden md:block">Real-time message tracking</p>
+        <div class="logo-text">
+          <h1>SMS Monitor</h1>
+          <p class="logo-subtitle">Real-time message tracking</p>
         </div>
       </div>
-      <div class="flex items-center gap-4 md:gap-6">
-        <div class="hidden md:flex items-center gap-4" v-if="user">
-          <div class="text-right">
-            <p
-              class="text-sm font-semibold text-slate-900 dark:text-white leading-none"
-            >
-              {{ user.email }}
-            </p>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-              <span class="inline-flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Admin Access
-              </span>
+      
+      <div class="user-section">
+        <div class="user-info" v-if="user">
+          <div class="user-details">
+            <p class="user-email">{{ user.email }}</p>
+            <p class="user-role">
+              <span class="status-dot"></span>
+              Admin Access
             </p>
           </div>
-          <div
-            class="relative size-11 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-md ring-2 ring-blue-500/20"
-          >
-            <!-- Using placeholder or user avatar if available -->
-            <div class="flex items-center justify-center h-full w-full text-white font-bold text-lg">
-              {{ user?.email?.charAt(0).toUpperCase() || 'U' }}
-            </div>
+          <div class="user-avatar">
+            {{ user?.email?.charAt(0).toUpperCase() || 'U' }}
           </div>
         </div>
+        
         <button
           @click="handleLogout"
           :disabled="isLoggingOut"
-          class="flex items-center justify-center gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-red-400 dark:hover:border-red-500 hover:text-red-600 dark:hover:text-red-400 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          class="logout-btn"
         >
-          <span class="material-symbols-outlined text-[18px]">logout</span>
-          <span class="hidden md:inline">{{ isLoggingOut ? "..." : "Logout" }}</span>
+          <span class="material-symbols-outlined btn-icon">logout</span>
+          <span class="btn-text">{{ isLoggingOut ? "..." : "Logout" }}</span>
         </button>
       </div>
     </div>
@@ -76,3 +59,168 @@ const handleLogout = async () => {
   }
 };
 </script>
+
+<style scoped>
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 24px;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-box {
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.logo-text h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.logo-subtitle {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-details {
+  text-align: right;
+}
+
+.user-email {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-success);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #eee;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #555;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: #666;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #f5f5f5;
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.logout-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  font-size: 18px;
+}
+
+.btn-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .logo-subtitle, .user-info {
+    display: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo-subtitle, .user-role {
+    color: #aaa;
+  }
+  
+  .user-avatar {
+    background-color: #333;
+    color: #eee;
+  }
+  
+  .logout-btn {
+    color: #aaa;
+  }
+  
+  .logout-btn:hover {
+    background-color: #333;
+  }
+}
+</style>

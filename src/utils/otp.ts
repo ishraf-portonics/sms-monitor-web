@@ -8,8 +8,7 @@ export const highlightOTP = (text: string): string => {
 
   return text.replace(
     otpPattern,
-    (match) =>
-      `<span class="inline-flex items-center gap-1.5 font-mono font-bold text-blue-700 dark:text-blue-300 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-blue-800/30 px-2.5 py-1 rounded-lg border-2 border-blue-200 dark:border-blue-700 shadow-sm">${match}</span>`
+    (match) => `<span class="otp-highlight">${match}</span>`
   );
 };
 

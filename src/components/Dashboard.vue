@@ -1,172 +1,132 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 font-display text-slate-900 dark:text-slate-100">
+  <div class="dashboard-container">
     <Header />
 
-    <main class="flex-1 px-4 py-8 md:px-8 lg:px-12">
-      <div class="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <!-- Page Header -->
-        <div class="flex flex-col gap-2">
-          <h2 class="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-white dark:via-blue-200 dark:to-white bg-clip-text text-transparent">
-            SMS Messages
-          </h2>
-          <p class="text-slate-600 dark:text-slate-400">Monitor and manage all incoming SMS messages</p>
-        </div>
-
-        <!-- Toolbar Area -->
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <!-- Search Bar -->
-          <div class="w-full md:max-w-md">
-            <label class="relative flex w-full items-center group">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                <span class="material-symbols-outlined text-[20px]">search</span>
-              </div>
-              <input
-                v-model="searchQuery"
-                class="h-12 w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 dark:focus:ring-primary/20 outline-none transition-all shadow-sm"
-                placeholder="Search by MSISDN, sender, or message content..."
-                type="text"
-                @input="handleSearch"
-              />
-            </label>
+    <main class="main-content">
+      <div class="panes-container">
+        <!-- Pane 1: MSISDN List -->
+        <div class="pane sidebar-msisdn">
+          <div class="pane-header">
+            <h3>MSISDNs</h3>
           </div>
-          <!-- Actions -->
-          <button
-            @click="handleRetry"
-            class="group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all duration-200"
-          >
-            <span class="material-symbols-outlined text-[20px] transition-transform group-hover:rotate-180 duration-500">refresh</span>
-            <span>Refresh List</span>
-          </button>
-        </div>
-
-        <!-- Loading State -->
-        <div v-if="smsStore.loading && smsStore.messages.length === 0" class="flex flex-col items-center justify-center py-32">
-          <div class="relative">
-             <div class="h-16 w-16 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
-             <div class="absolute top-0 left-0 h-16 w-16 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
-          </div>
-          <p class="mt-6 text-slate-600 dark:text-slate-400 font-medium">Loading messages...</p>
-        </div>
-
-        <!-- Error State -->
-        <div v-else-if="smsStore.error" class="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-12 text-center max-w-lg mx-auto shadow-lg">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 mb-4">
-            <span class="material-symbols-outlined text-3xl text-red-600 dark:text-red-400">error</span>
-          </div>
-          <p class="text-red-700 dark:text-red-300 mb-6 font-medium">{{ smsStore.error }}</p>
-          <button @click="handleRetry" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold transition-all hover:scale-105">Try Again</button>
-        </div>
-
-        <!-- Table Container -->
-        <div v-else class="flex flex-col overflow-hidden rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-slate-950/50">
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[1000px] text-left">
-              <thead>
-                <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-800 dark:via-blue-900/20 dark:to-slate-800">
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-32">
-                    ID
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-40">
-                    MSISDN
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-40">
-                    Sender
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                    Message
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-44">
-                    Received At
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-44">
-                    Created At
-                  </th>
-                  <th class="whitespace-nowrap px-6 py-5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 w-24 text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                <tr
-                  v-for="sms in filteredMessages"
-                  :key="sms.id"
-                  class="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-transparent dark:hover:from-blue-900/10 dark:hover:to-transparent transition-all duration-200"
-                >
-                  <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap font-mono">
-                    {{ sms.id }}
-                  </td>
-                  <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap font-mono font-medium">
-                    {{ sms.msisdn }}
-                  </td>
-                  <td class="px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                    <div class="flex items-center gap-2">
-                      <div class="w-2 h-2 rounded-full bg-blue-500 group-hover:scale-125 transition-transform"></div>
-                      {{ sms.sender }}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 max-w-md">
-                    <div class="flex items-center gap-2">
-                       <!-- Using v-html for highlighted OTP if present -->
-                       <div v-if="hasOTP(sms.message)" v-html="highlightOTP(sms.message)" class="leading-relaxed"></div>
-                       <span v-else class="leading-relaxed">{{ sms.message }}</span>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    {{ formatDate(sms.received_at) }}
-                  </td>
-                  <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    {{ formatDate(sms.created_at) }}
-                  </td>
-                  <td class="px-6 py-4 text-right">
-                    <button
-                      @click="copyText(sms.message)"
-                      aria-label="Copy message"
-                      class="inline-flex items-center justify-center rounded-lg p-2.5 text-slate-400 hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-900/40 dark:hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:scale-110"
-                      title="Copy to clipboard"
-                    >
-                      <span class="material-symbols-outlined text-[20px]">content_copy</span>
-                    </button>
-                  </td>
-                </tr>
-                 <!-- Empty State in Table -->
-                <tr v-if="filteredMessages.length === 0">
-                  <td colspan="7" class="px-6 py-20 text-center">
-                    <div class="flex flex-col items-center gap-3">
-                      <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-4xl text-slate-400">inbox</span>
-                      </div>
-                      <p class="text-slate-500 dark:text-slate-400 font-medium">No messages found matching your search.</p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Pagination / Load More -->
-          <div class="flex items-center justify-between border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-6 py-4">
-            <p class="text-sm text-slate-600 dark:text-slate-400">
-              Showing <span class="font-semibold text-slate-900 dark:text-white">{{ filteredMessages.length }}</span> of <span class="font-semibold text-slate-900 dark:text-white">{{ smsStore.totalCount }}</span> results
-            </p>
-            <div class="flex gap-2" v-if="smsStore.hasMore">
-               <button
-                  @click="handleLoadMore"
-                  :disabled="smsStore.loading"
-                  class="rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 hover:border-blue-400 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-105"
-                >
-                  {{ smsStore.loading ? 'Loading...' : 'Load More' }}
-                </button>
+          <div class="pane-content">
+            <div v-if="smsStore.loadingMSISDNs" class="loading-state-sm">
+              <div class="spinner-sm"></div>
             </div>
+            <ul v-else class="list-group">
+              <li 
+                v-for="msisdn in smsStore.uniqueMSISDNs" 
+                :key="msisdn"
+                @click="handleSelectMSISDN(msisdn)"
+                :class="['list-item', { active: smsStore.selectedMSISDN === msisdn }]"
+              >
+                <span class="material-symbols-outlined item-icon">sim_card</span>
+                <span class="item-text monospace">{{ msisdn }}</span>
+                <span class="material-symbols-outlined chevron">chevron_right</span>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="mt-6 flex justify-center">
-          <div class="flex items-center gap-3 rounded-full bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-800/50 px-6 py-3 border-2 border-slate-200 dark:border-slate-700 shadow-lg">
-            <span class="material-symbols-outlined text-[18px] text-slate-500">lock</span>
-            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 tracking-wide">
-              Internal QA Use Only - Do not share externally.
-            </p>
+        <!-- Pane 2: Sender List -->
+        <div class="pane sidebar-sender">
+          <div class="pane-header">
+            <h3>Senders</h3>
+            <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{ smsStore.selectedMSISDN }}</span>
+          </div>
+          <div class="pane-content">
+            <div v-if="!smsStore.selectedMSISDN" class="empty-selection">
+              <span class="material-symbols-outlined">arrow_back</span>
+              <p>Select an MSISDN</p>
+            </div>
+            <div v-else-if="smsStore.loadingSenders" class="loading-state-sm">
+              <div class="spinner-sm"></div>
+            </div>
+            <ul v-else class="list-group">
+              <li 
+                v-for="sender in smsStore.filteredSenders" 
+                :key="sender"
+                @click="handleSelectSender(sender)"
+                :class="['list-item', { active: smsStore.selectedSender === sender }]"
+              >
+                <div class="sender-avatar">{{ sender.charAt(0).toUpperCase() }}</div>
+                <span class="item-text font-medium">{{ sender }}</span>
+              </li>
+               <li v-if="smsStore.filteredSenders.length === 0" class="empty-list">
+                No senders found
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pane 3: Chat View -->
+        <div class="pane chat-area">
+          <div class="chat-header">
+            <div v-if="smsStore.selectedSender" class="chat-header-info">
+              <div class="chat-avatar">{{ smsStore.selectedSender.charAt(0).toUpperCase() }}</div>
+              <div class="chat-meta">
+                <h4>{{ smsStore.selectedSender }}</h4>
+                <p>To: {{ smsStore.selectedMSISDN }}</p>
+              </div>
+            </div>
+            <div v-else class="chat-header-placeholder">
+              <h3>Message Details</h3>
+            </div>
+            
+            <button 
+              v-if="smsStore.selectedSender" 
+              @click="handleRefreshChat" 
+              class="icon-btn" 
+              title="Refresh"
+            >
+              <span class="material-symbols-outlined">refresh</span>
+            </button>
+          </div>
+
+          <div class="chat-content" ref="chatContentRef">
+            <div v-if="!smsStore.selectedSender" class="empty-chat-state">
+              <div class="empty-illustration">
+                <span class="material-symbols-outlined">forum</span>
+              </div>
+              <h3>Select a Conversation</h3>
+              <p>Choose a sender from the list to view messages.</p>
+            </div>
+            
+            <div v-else-if="smsStore.loading" class="loading-state">
+               <div class="spinner"></div>
+               <p>Loading conversation...</p>
+            </div>
+
+            <div v-else class="messages-list">
+              <div 
+                v-for="sms in smsStore.currentConversation" 
+                :key="sms.id" 
+                class="message-bubble-wrapper"
+              >
+                <div class="message-timestamp-label">
+                  {{ formatMessageDate(sms.received_at) }}
+                </div>
+                <div class="message-bubble">
+                  <div class="bubble-content">
+                     <div v-if="hasOTP(sms.message)" v-html="highlightOTP(sms.message)"></div>
+                     <span v-else>{{ sms.message }}</span>
+                  </div>
+                  <div class="bubble-footer">
+                    <span class="time">{{ formatTime(sms.received_at) }}</span>
+                    <button 
+                      @click="copyText(sms.message)" 
+                      class="copy-btn-sm" 
+                      title="Copy message"
+                    >
+                      <span class="material-symbols-outlined">content_copy</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-if="smsStore.currentConversation.length === 0" class="empty-list">
+                No messages found.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -175,67 +135,424 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, nextTick, watch } from "vue";
 import { useSMSStore } from "@/stores/sms";
 import Header from "./Header.vue";
 import { copyToClipboard } from "@/utils/clipboard";
 import { highlightOTP, hasOTP } from "@/utils/otp";
 
 const smsStore = useSMSStore();
-const searchQuery = ref("");
+const chatContentRef = ref<HTMLElement | null>(null);
 
-const handleLoadMore = async () => {
-  await smsStore.loadMoreMessages();
+const handleSelectMSISDN = async (msisdn: string) => {
+  if (smsStore.selectedMSISDN === msisdn) return;
+  await smsStore.selectMSISDN(msisdn);
 };
 
-const handleRetry = async () => {
-  await smsStore.loadMessages();
+const handleSelectSender = async (sender: string) => {
+  if (smsStore.selectedSender === sender) return;
+  await smsStore.selectSender(sender);
 };
 
-const handleSearch = () => {
-  // Client-side filtering for now, or implement server-side if API supports it
-  // Using computed filteredMessages for client-side
+const handleRefreshChat = async () => {
+  await smsStore.refreshConversation();
 };
 
-const filteredMessages = computed(() => {
-  if (!searchQuery.value) return smsStore.messages;
-  const query = searchQuery.value.toLowerCase();
-  return smsStore.messages.filter(sms => 
-    sms.sender.toLowerCase().includes(query) || 
-    sms.message.toLowerCase().includes(query) ||
-    sms.msisdn.toLowerCase().includes(query)
-  );
-});
-
-const formatDate = (dateString: string) => {
+const formatMessageDate = (dateString: string) => {
   const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  
-  // If less than 1 hour, show relative time
-  if (diff < 60 * 60 * 1000) {
-    const mins = Math.floor(diff / (60 * 1000));
-    return mins < 1 ? 'Just now' : `${mins} mins ago`;
-  }
-  
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 };
 
 const copyText = async (text: string) => {
   try {
     await copyToClipboard(text);
-    // Could add toast notification here
   } catch (err) {
     console.error("Failed to copy:", err);
   }
 };
 
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (chatContentRef.value) {
+      chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
+    }
+  });
+};
+
+watch(() => smsStore.currentConversation, () => {
+  scrollToBottom();
+});
+
 onMounted(async () => {
-  await smsStore.loadMessages();
+  // Load initial lists
+  await smsStore.loadMSISDNsList();
+  // We don't strictly need to load all senders anymore since we load them per MSISDN
 });
 </script>
+
+<style scoped>
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-bg-light);
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.panes-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.pane-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  flex-shrink: 0;
+}
+
+.pane-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.pane-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Sidebar Specifics */
+.sidebar-msisdn {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.sidebar-sender {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.chat-area {
+  flex: 1;
+  background-color: var(--color-bg-light);
+  border-right: none;
+}
+
+/* List Styles */
+.list-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-item {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+
+.list-item:hover {
+  background-color: #f5f5f5;
+}
+
+.list-item.active {
+  background-color: #e6f0ff;
+  border-left: 4px solid var(--color-primary);
+  padding-left: 12px; /* Compensate for border */
+}
+
+.item-icon {
+  color: #666;
+  font-size: 20px;
+}
+
+.item-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monospace {
+  font-family: monospace;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.chevron {
+  font-size: 18px;
+  color: #999;
+}
+
+.list-item.active .chevron,
+.list-item.active .item-icon,
+.list-item.active .item-text {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* Sender List */
+.sender-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.list-item.active .sender-avatar {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.subtitle-sm {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+/* Chat Area */
+.chat-header {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.chat-meta h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chat-meta p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
+}
+
+.chat-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Messages */
+.message-bubble-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  max-width: 80%;
+}
+
+.message-timestamp-label {
+  font-size: 10px;
+  color: #999;
+  margin-bottom: 4px;
+  margin-left: 12px;
+}
+
+.message-bubble {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  border-top-left-radius: 2px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.bubble-content {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.bubble-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.time {
+  font-size: 11px;
+  color: #999;
+}
+
+.copy-btn-sm {
+  padding: 4px;
+  border-radius: 4px;
+  color: #999;
+  background: transparent;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-btn-sm:hover {
+  background-color: #f0f0f0;
+  color: var(--color-primary);
+}
+
+.copy-btn-sm .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* States */
+.empty-selection, .empty-chat-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-illustration .material-symbols-outlined {
+  font-size: 64px;
+  margin-bottom: 16px;
+  color: #ddd;
+}
+
+.loading-state, .loading-state-sm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+}
+
+.spinner, .spinner-sm {
+  border: 3px solid #eee;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner { width: 40px; height: 40px; margin-bottom: 16px; }
+.spinner-sm { width: 24px; height: 24px; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .pane, .pane-header, .chat-header {
+    background-color: #1e1e1e;
+    border-color: #333;
+  }
+  
+  .chat-area, .dashboard-container {
+    background-color: #121212;
+  }
+  
+  .list-item {
+    border-color: #333;
+    color: #eee;
+  }
+  
+  .list-item:hover {
+    background-color: #2a2a2a;
+  }
+  
+  .list-item.active {
+    background-color: #2c2c2c;
+  }
+  
+  .message-bubble {
+    background-color: #2c2c2c;
+    border-color: #444;
+  }
+  
+  .bubble-footer {
+    border-top-color: #444;
+  }
+  
+  .copy-btn-sm:hover {
+    background-color: #444;
+  }
+
+  .sender-avatar {
+    background-color: #333;
+    color: #eee;
+  }
+  
+  .empty-illustration .material-symbols-outlined {
+    color: #333;
+  }
+}
+</style>
