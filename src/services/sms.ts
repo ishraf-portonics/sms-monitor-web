@@ -171,7 +171,7 @@ export const fetchConversation = async (msisdn: string, sender: string) => {
       .select("*")
       .eq("msisdn", msisdn)
       .eq("sender", sender)
-      .order("received_at", { ascending: true }); // Oldest first for chat
+      .order("received_at", { ascending: false }); // Newest first for chat
 
     if (error) {
       console.error("Error fetching conversation:", error.message);

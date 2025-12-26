@@ -168,6 +168,13 @@ const handleSelectSender = async (sender: string) => {
 };
 
 const handleRefreshMSISDNs = async () => {
+  // Clear selection state
+  smsStore.selectedMSISDN = null;
+  smsStore.selectedSender = null;
+  smsStore.currentConversation = [];
+  smsStore.filteredSenders = [];
+
+  // Reload list
   await smsStore.loadMSISDNsList();
 };
 
