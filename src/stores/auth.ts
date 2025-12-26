@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { User } from "@supabase/supabase-js";
-import { getCurrentUser, onAuthStateChange } from "@/services/auth";
+import { getCurrentUser, onAuthStateChange, signOut } from "@/services/auth";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
@@ -10,6 +10,18 @@ export const useAuthStore = defineStore("auth", () => {
 
   const isAuthenticated = computed(() => !!user.value);
 
+  const checkUserDomain = async (currentUser: User | null) => {
+    if (!currentUser) return true; // No user to check
+    
+    if (currentUser.email && !currentUser.email.endsWith("@portonics.com")) {
+      await signOut();
+      user.value = null;
+      error.value = "Restricted access: Only @portonics.com email addresses are allowed.";
+      return false;
+    }
+    return true;
+  };
+
   const initializeAuth = async () => {
     try {
       loading.value = true;
@@ -17,11 +29,16 @@ export const useAuthStore = defineStore("auth", () => {
 
       // Check existing session
       const currentUser = await getCurrentUser();
-      user.value = currentUser;
+      
+      if (await checkUserDomain(currentUser)) {
+        user.value = currentUser;
+      }
 
       // Listen for auth state changes
-      const subscription = onAuthStateChange((authUser: User | null) => {
-        user.value = authUser;
+      const subscription = onAuthStateChange(async (authUser: User | null) => {
+        if (await checkUserDomain(authUser)) {
+          user.value = authUser;
+        }
       });
 
       return subscription;
