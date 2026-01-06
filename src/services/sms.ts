@@ -115,22 +115,36 @@ export const getUniqueSenders = async () => {
   }
 };
 
-export const getUniqueMSISDNs = async () => {
+export interface MSISDNWithTime {
+  msisdn: string;
+  latestTime: string;
+}
+
+export const getUniqueMSISDNs = async (): Promise<MSISDNWithTime[]> => {
   try {
     const { data, error } = await supabase
       .from("sms_messages")
-      .select("msisdn", { count: "exact" })
-      .order("msisdn");
+      .select("msisdn, received_at")
+      .order("received_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching MSISDNs:", error.message);
       throw error;
     }
 
-    // Get unique MSISDNs
-    const uniqueMSISDNs = Array.from(
-      new Set((data as any[])?.map((d) => d.msisdn) || [])
-    );
+    // Get unique MSISDNs while preserving order by latest message
+    const seenMSISDNs = new Map<string, string>();
+    const uniqueMSISDNs: MSISDNWithTime[] = [];
+
+    for (const item of (data as any[]) || []) {
+      if (!seenMSISDNs.has(item.msisdn)) {
+        seenMSISDNs.set(item.msisdn, item.received_at);
+        uniqueMSISDNs.push({
+          msisdn: item.msisdn,
+          latestTime: item.received_at,
+        });
+      }
+    }
 
     return uniqueMSISDNs;
   } catch (err) {
@@ -139,23 +153,39 @@ export const getUniqueMSISDNs = async () => {
   }
 };
 
-export const getSendersForMSISDN = async (msisdn: string) => {
+export interface SenderWithTime {
+  sender: string;
+  latestTime: string;
+}
+
+export const getSendersForMSISDN = async (
+  msisdn: string
+): Promise<SenderWithTime[]> => {
   try {
     const { data, error } = await supabase
       .from("sms_messages")
-      .select("sender", { count: "exact" })
+      .select("sender, received_at")
       .eq("msisdn", msisdn)
-      .order("sender");
+      .order("received_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching senders for MSISDN:", error.message);
       throw error;
     }
 
-    // Get unique senders for this MSISDN
-    const uniqueSenders = Array.from(
-      new Set((data as any[])?.map((d) => d.sender) || [])
-    );
+    // Get unique senders while preserving order by latest message
+    const seenSenders = new Map<string, string>();
+    const uniqueSenders: SenderWithTime[] = [];
+
+    for (const item of (data as any[]) || []) {
+      if (!seenSenders.has(item.sender)) {
+        seenSenders.set(item.sender, item.received_at);
+        uniqueSenders.push({
+          sender: item.sender,
+          latestTime: item.received_at,
+        });
+      }
+    }
 
     return uniqueSenders;
   } catch (err) {

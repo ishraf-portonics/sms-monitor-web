@@ -8,7 +8,11 @@
         <div class="pane sidebar-msisdn">
           <div class="pane-header">
             <h3>MSISDNs</h3>
-            <button @click="handleRefreshMSISDNs" class="icon-btn-sm" title="Refresh List">
+            <button
+              @click="handleRefreshMSISDNs"
+              class="icon-btn-sm"
+              title="Refresh List"
+            >
               <span class="material-symbols-outlined">refresh</span>
             </button>
           </div>
@@ -17,15 +21,24 @@
               <div class="spinner-sm"></div>
             </div>
             <ul v-else class="list-group">
-              <li 
-                v-for="msisdn in smsStore.uniqueMSISDNs" 
-                :key="msisdn"
-                @click="handleSelectMSISDN(msisdn)"
-                :class="['list-item', { active: smsStore.selectedMSISDN === msisdn }]"
+              <li
+                v-for="item in smsStore.uniqueMSISDNs"
+                :key="item.msisdn"
+                @click="handleSelectMSISDN(item.msisdn)"
+                :class="[
+                  'list-item',
+                  {
+                    active: smsStore.selectedMSISDN === item.msisdn,
+                  },
+                ]"
               >
-                <span class="material-symbols-outlined item-icon">sim_card</span>
-                <span class="item-text monospace">{{ msisdn }}</span>
-                <span class="material-symbols-outlined chevron">chevron_right</span>
+                <span class="material-symbols-outlined item-icon"
+                  >sim_card</span
+                >
+                <span class="item-text monospace">{{ item.msisdn }}</span>
+                <span class="ml-auto monospace time-label">{{
+                  formatTime(item.latestTime)
+                }}</span>
               </li>
             </ul>
           </div>
@@ -36,12 +49,14 @@
           <div class="pane-header">
             <div class="header-title">
               <h3>Senders</h3>
-              <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{ smsStore.selectedMSISDN }}</span>
+              <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{
+                smsStore.selectedMSISDN
+              }}</span>
             </div>
-            <button 
-              v-if="smsStore.selectedMSISDN" 
-              @click="handleRefreshSenders" 
-              class="icon-btn-sm" 
+            <button
+              v-if="smsStore.selectedMSISDN"
+              @click="handleRefreshSenders"
+              class="icon-btn-sm"
               title="Refresh List"
             >
               <span class="material-symbols-outlined">refresh</span>
@@ -56,16 +71,31 @@
               <div class="spinner-sm"></div>
             </div>
             <ul v-else class="list-group">
-              <li 
-                v-for="sender in smsStore.filteredSenders" 
-                :key="sender"
-                @click="handleSelectSender(sender)"
-                :class="['list-item', { active: smsStore.selectedSender === sender }]"
+              <li
+                v-for="item in smsStore.filteredSenders"
+                :key="item.sender"
+                @click="handleSelectSender(item.sender)"
+                :class="[
+                  'list-item',
+                  {
+                    active: smsStore.selectedSender === item.sender,
+                  },
+                ]"
               >
-                <div class="sender-avatar">{{ sender.charAt(0).toUpperCase() }}</div>
-                <span class="item-text font-medium">{{ sender }}</span>
+                <div class="sender-avatar">
+                  {{ item.sender.charAt(0).toUpperCase() }}
+                </div>
+                <div class="sender-info">
+                  <span class="item-text font-medium">{{ item.sender }}</span>
+                  <span class="time-label-sm">{{
+                    formatTime(item.latestTime)
+                  }}</span>
+                </div>
               </li>
-               <li v-if="smsStore.filteredSenders.length === 0" class="empty-list">
+              <li
+                v-if="smsStore.filteredSenders.length === 0"
+                class="empty-list"
+              >
                 No senders found
               </li>
             </ul>
@@ -76,20 +106,22 @@
         <div class="pane chat-area">
           <div class="chat-header">
             <div v-if="smsStore.selectedSender" class="chat-header-info">
-              <div class="chat-avatar">{{ smsStore.selectedSender.charAt(0).toUpperCase() }}</div>
+              <div class="chat-avatar">
+                {{ smsStore.selectedSender.charAt(0).toUpperCase() }}
+              </div>
               <div class="chat-meta">
                 <h4>{{ smsStore.selectedSender }}</h4>
                 <p>To: {{ smsStore.selectedMSISDN }}</p>
               </div>
             </div>
             <div v-else class="chat-header-placeholder">
-              <h3>Message Details</h3>
+              <h3>Messages</h3>
             </div>
-            
-            <button 
-              v-if="smsStore.selectedSender" 
-              @click="handleRefreshChat" 
-              class="icon-btn" 
+
+            <button
+              v-if="smsStore.selectedSender"
+              @click="handleRefreshChat"
+              class="icon-btn"
               title="Refresh"
             >
               <span class="material-symbols-outlined">refresh</span>
@@ -104,16 +136,16 @@
               <h3>Select a Conversation</h3>
               <p>Choose a sender from the list to view messages.</p>
             </div>
-            
+
             <div v-else-if="smsStore.loading" class="loading-state">
-               <div class="spinner"></div>
-               <p>Loading conversation...</p>
+              <div class="spinner"></div>
+              <p>Loading conversation...</p>
             </div>
 
             <div v-else class="messages-list">
-              <div 
-                v-for="sms in smsStore.currentConversation" 
-                :key="sms.id" 
+              <div
+                v-for="sms in smsStore.currentConversation"
+                :key="sms.id"
                 class="message-bubble-wrapper"
               >
                 <div class="message-timestamp-label">
@@ -121,22 +153,30 @@
                 </div>
                 <div class="message-bubble">
                   <div class="bubble-content">
-                     <div v-if="hasOTP(sms.message)" v-html="highlightOTP(sms.message)"></div>
-                     <span v-else>{{ sms.message }}</span>
+                    <div
+                      v-if="hasOTP(sms.message)"
+                      v-html="highlightOTP(sms.message)"
+                    ></div>
+                    <span v-else>{{ sms.message }}</span>
                   </div>
                   <div class="bubble-footer">
                     <span class="time">{{ formatTime(sms.received_at) }}</span>
-                    <button 
-                      @click="copyText(sms.message)" 
-                      class="copy-btn-sm" 
+                    <button
+                      @click="copyText(sms.message)"
+                      class="copy-btn-sm"
                       title="Copy OTP or Message"
                     >
-                      <span class="material-symbols-outlined">content_copy</span>
+                      <span class="material-symbols-outlined"
+                        >content_copy</span
+                      >
                     </button>
                   </div>
                 </div>
               </div>
-              <div v-if="smsStore.currentConversation.length === 0" class="empty-list">
+              <div
+                v-if="smsStore.currentConversation.length === 0"
+                class="empty-list"
+              >
                 No messages found.
               </div>
             </div>
@@ -148,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { useSMSStore } from "@/stores/sms";
 import Header from "./Header.vue";
 import { copyToClipboard } from "@/utils/clipboard";
@@ -191,12 +231,19 @@ const handleRefreshChat = async () => {
 
 const formatMessageDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 };
 
 const formatTime = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const copyText = async (text: string) => {
@@ -212,18 +259,8 @@ const copyText = async (text: string) => {
   }
 };
 
-
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (chatContentRef.value) {
-      chatContentRef.value.scrollTop = chatContentRef.value.scrollHeight;
-    }
-  });
-};
-
-watch(() => smsStore.currentConversation, () => {
-  scrollToBottom();
-});
+// Removed auto-scroll to bottom since messages are in descending order
+// and should be shown from the top
 
 onMounted(async () => {
   // Load initial lists
@@ -271,7 +308,8 @@ onMounted(async () => {
   justify-content: space-between;
 }
 
-.icon-btn, .icon-btn-sm {
+.icon-btn,
+.icon-btn-sm {
   padding: 8px;
   background: transparent;
   color: #999;
@@ -286,7 +324,8 @@ onMounted(async () => {
   padding: 4px;
 }
 
-.icon-btn:hover, .icon-btn-sm:hover {
+.icon-btn:hover,
+.icon-btn-sm:hover {
   background-color: #f0f0f0;
   color: var(--color-primary);
 }
@@ -379,6 +418,11 @@ onMounted(async () => {
   font-weight: 500;
 }
 
+.time-label {
+  font-size: 11px;
+  color: #999;
+}
+
 /* Sender List */
 .sender-avatar {
   width: 36px;
@@ -396,6 +440,24 @@ onMounted(async () => {
 .list-item.active .sender-avatar {
   background-color: var(--color-primary);
   color: white;
+}
+
+.sender-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.sender-info .item-text {
+  margin: 0;
+}
+
+.time-label-sm {
+  font-size: 10px;
+  color: #999;
+  font-family: monospace;
 }
 
 .subtitle-sm {
@@ -479,7 +541,7 @@ onMounted(async () => {
   border-radius: 12px;
   border-top-left-radius: 2px;
   padding: 12px 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   position: relative;
 }
 
@@ -528,7 +590,8 @@ onMounted(async () => {
 }
 
 /* States */
-.empty-selection, .empty-chat-state {
+.empty-selection,
+.empty-chat-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -545,7 +608,8 @@ onMounted(async () => {
   color: #ddd;
 }
 
-.loading-state, .loading-state-sm {
+.loading-state,
+.loading-state-sm {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -554,51 +618,66 @@ onMounted(async () => {
   color: #999;
 }
 
-.spinner, .spinner-sm {
+.spinner,
+.spinner-sm {
   border: 3px solid #eee;
   border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
-.spinner { width: 40px; height: 40px; margin-bottom: 16px; }
-.spinner-sm { width: 24px; height: 24px; }
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 16px;
+}
+.spinner-sm {
+  width: 24px;
+  height: 24px;
+}
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
-  .pane, .pane-header, .chat-header {
+  .pane,
+  .pane-header,
+  .chat-header {
     background-color: #1e1e1e;
     border-color: #333;
   }
-  
-  .chat-area, .dashboard-container {
+
+  .chat-area,
+  .dashboard-container {
     background-color: #121212;
   }
-  
+
   .list-item {
     border-color: #333;
     color: #eee;
   }
-  
+
   .list-item:hover {
     background-color: #2a2a2a;
   }
-  
+
   .list-item.active {
     background-color: #2c2c2c;
   }
-  
+
   .message-bubble {
     background-color: #2c2c2c;
     border-color: #444;
   }
-  
+
   .bubble-footer {
     border-top-color: #444;
   }
-  
+
   .copy-btn-sm:hover {
     background-color: #444;
   }
@@ -607,7 +686,7 @@ onMounted(async () => {
     background-color: #333;
     color: #eee;
   }
-  
+
   .empty-illustration .material-symbols-outlined {
     color: #333;
   }

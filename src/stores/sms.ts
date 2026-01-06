@@ -1,6 +1,11 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { SMS, SMSFilter } from "@/services/sms";
+import type {
+  SMS,
+  SMSFilter,
+  MSISDNWithTime,
+  SenderWithTime,
+} from "@/services/sms";
 import {
   fetchSMS,
   searchSMS,
@@ -19,7 +24,7 @@ export const useSMSStore = defineStore("sms", () => {
   const filters = ref<SMSFilter>({});
   const searchTerm = ref("");
   const uniqueSenders = ref<string[]>([]);
-  const uniqueMSISDNs = ref<string[]>([]);
+  const uniqueMSISDNs = ref<MSISDNWithTime[]>([]);
   const loadingSenders = ref(false);
   const loadingMSISDNs = ref(false);
 
@@ -123,19 +128,19 @@ export const useSMSStore = defineStore("sms", () => {
   const selectedMSISDN = ref<string | null>(null);
   const selectedSender = ref<string | null>(null);
   const currentConversation = ref<SMS[]>([]);
-  const filteredSenders = ref<string[]>([]); // Senders for the selected MSISDN
+  const filteredSenders = ref<SenderWithTime[]>([]); // Senders for the selected MSISDN
 
   const selectMSISDN = async (msisdn: string) => {
     selectedMSISDN.value = msisdn;
     selectedSender.value = null; // Reset sender
     currentConversation.value = []; // Reset chat
-    
+
     // Load senders available for this MSISDN
     try {
       loadingSenders.value = true;
       // We import getSendersForMSISDN dynamically to avoid circular dependency issues if any,
       // though typically best to import at top. We'll update imports next.
-      const { getSendersForMSISDN } = await import("@/services/sms"); 
+      const { getSendersForMSISDN } = await import("@/services/sms");
       filteredSenders.value = await getSendersForMSISDN(msisdn);
     } catch (err) {
       console.error("Failed to load senders for MSISDN:", err);
@@ -147,12 +152,15 @@ export const useSMSStore = defineStore("sms", () => {
 
   const selectSender = async (sender: string) => {
     if (!selectedMSISDN.value) return;
-    
+
     selectedSender.value = sender;
     try {
       loading.value = true;
       const { fetchConversation } = await import("@/services/sms");
-      currentConversation.value = await fetchConversation(selectedMSISDN.value, sender);
+      currentConversation.value = await fetchConversation(
+        selectedMSISDN.value,
+        sender
+      );
     } catch (err) {
       console.error("Failed to load conversation:", err);
       error.value = "Failed to load conversation";
@@ -180,7 +188,7 @@ export const useSMSStore = defineStore("sms", () => {
     uniqueMSISDNs,
     loadingSenders,
     loadingMSISDNs,
-    
+
     // New State
     selectedMSISDN,
     selectedSender,
@@ -200,7 +208,7 @@ export const useSMSStore = defineStore("sms", () => {
     clearFilters,
     loadSendersList,
     loadMSISDNsList,
-    
+
     // New Actions
     selectMSISDN,
     selectSender,
