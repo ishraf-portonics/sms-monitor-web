@@ -1,5 +1,12 @@
 <template>
-  <div class="dashboard-container">
+  <div
+    class="dashboard-container"
+    :class="{
+      'view-msisdn': !smsStore.selectedMSISDN,
+      'view-senders': smsStore.selectedMSISDN && !smsStore.selectedSender,
+      'view-chat': smsStore.selectedSender,
+    }"
+  >
     <Header />
 
     <main class="main-content">
@@ -47,11 +54,23 @@
         <!-- Pane 2: Sender List -->
         <div class="pane sidebar-sender">
           <div class="pane-header">
-            <div class="header-title">
-              <h3>Senders</h3>
-              <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{
-                smsStore.selectedMSISDN
-              }}</span>
+            <div
+              class="header-title"
+              style="display: flex; align-items: center"
+            >
+              <button
+                class="icon-btn-sm mobile-only mr-2"
+                @click="clearMSISDNSelection"
+                title="Back to MSISDNs"
+              >
+                <span class="material-symbols-outlined">arrow_back</span>
+              </button>
+              <div>
+                <h3>Senders</h3>
+                <span v-if="smsStore.selectedMSISDN" class="subtitle-sm">{{
+                  smsStore.selectedMSISDN
+                }}</span>
+              </div>
             </div>
             <button
               v-if="smsStore.selectedMSISDN"
@@ -106,6 +125,13 @@
         <div class="pane chat-area">
           <div class="chat-header">
             <div v-if="smsStore.selectedSender" class="chat-header-info">
+              <button
+                class="icon-btn-sm mobile-only mr-2"
+                @click="clearSenderSelection"
+                title="Back to Senders"
+              >
+                <span class="material-symbols-outlined">arrow_back</span>
+              </button>
               <div class="chat-avatar">
                 {{ smsStore.selectedSender.charAt(0).toUpperCase() }}
               </div>
@@ -227,6 +253,18 @@ const handleRefreshSenders = async () => {
 
 const handleRefreshChat = async () => {
   await smsStore.refreshConversation();
+};
+
+const clearMSISDNSelection = () => {
+  smsStore.selectedMSISDN = null;
+  smsStore.selectedSender = null;
+  smsStore.currentConversation = [];
+  smsStore.filteredSenders = [];
+};
+
+const clearSenderSelection = () => {
+  smsStore.selectedSender = null;
+  smsStore.currentConversation = [];
 };
 
 const formatMessageDate = (dateString: string) => {
@@ -689,6 +727,70 @@ onMounted(async () => {
 
   .empty-illustration .material-symbols-outlined {
     color: #333;
+  }
+}
+
+/* Utilities */
+.mr-2 {
+  margin-right: 8px;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .mobile-only {
+    display: flex;
+  }
+
+  .panes-container {
+    position: relative;
+  }
+
+  .pane {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--color-bg);
+    z-index: 10;
+    /* Transition for smooth sliding could be added here */
+    display: none; /* Hide all by default, show via specific logic below */
+  }
+
+  /* Logic: 
+       - If nothing selected (view-msisdn), showing MSISDN list
+       - If MSISDN selected (view-senders), showing Sender list
+       - If Sender selected (view-chat), showing Chat
+    */
+
+  /* Default: Hide all panes on mobile */
+  .pane {
+    display: none;
+  }
+
+  /* View MSISDN State */
+  .view-msisdn .sidebar-msisdn {
+    display: flex;
+    width: 100%;
+    z-index: 10;
+  }
+
+  /* View Senders State */
+  .view-senders .sidebar-sender {
+    display: flex;
+    width: 100%;
+    z-index: 20;
+  }
+
+  /* View Chat State */
+  .view-chat .chat-area {
+    display: flex;
+    width: 100%;
+    z-index: 30;
   }
 }
 </style>
